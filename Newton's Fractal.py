@@ -1,5 +1,4 @@
 '''
-use another way to color the image
 get the tick value right
 ?use pygame to be possible to zoom?
 '''
@@ -35,6 +34,21 @@ def solve(poly, start, err=10**-5, maxiter=100):
     return x
 
 
+def find_closest(root, roots):
+    """
+    :param root: the root
+    :param roots: list of roots that are to be compared
+    :return: index of the closest root
+    """
+    max_dist = float("inf")
+    idx = 0
+    for r in range(len(roots)):
+        dist = (roots[r] - root) ** 2
+        if dist < max_dist:
+            max_dist = dist
+            idx = r
+    return idx
+
 p = (2, 2, 1, 3j, -1, 1)  # sets the polynomial coefficients
 minr = float("inf")
 maxr = float("-inf")
@@ -61,9 +75,7 @@ yy = np.linspace(mini, maxi, num=SIZE)
 #plt.show()
 
 zz = []  # create and populate the image vector
-l = 0
 for nx in xx:
-    l += 1
     nz = []
     for ny in yy*1j:
         nz.append(nx+ny)
@@ -72,8 +84,16 @@ for nx in xx:
 zz = np.array(zz).T  # transpose so the imaginary value is the y axis
 t = time.time()
 zz = solve(p, zz)
+
+nzz = []
+for line in zz:
+    nz = []
+    for val in line:
+        nz.append(find_closest(val, roots))
+    nzz.append(np.array(nz))
+
 print(time.time() - t)  # time the creation of the image
 
 
-plt.imshow(abs(zz))  # show the image
+plt.imshow(nzz)  # show the image
 plt.show()
