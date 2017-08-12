@@ -9,10 +9,10 @@ from numpy.polynomial.polynomial import polyval as val
 import numpy as np
 import time
 
-SIZE = 1000  # setting the size of the image, it will be SIZE x SIZE
+SIZE = 500  # setting the size of the image, it will be SIZE x SIZE
 
 
-def solve(poly, start, err=10**-5, maxiter=100):
+def solve(poly, start, err=10**-5, maxiter=500):
     """
     finds a polynomial root using Newton's method
     :param poly: tuple with the coefficients of the polynomial
@@ -43,13 +43,13 @@ def find_closest(root, roots):
     max_dist = float("inf")
     idx = 0
     for r in range(len(roots)):
-        dist = (roots[r] - root) ** 2
+        dist = abs(roots[r] - root)
         if dist < max_dist:
             max_dist = dist
             idx = r
     return idx
 
-p = (2, 2, 1, 3j, -1, 1)  # sets the polynomial coefficients
+p = (1, 0, 0, 0, 1)  # sets the polynomial coefficients
 minr = float("inf")
 maxr = float("-inf")
 mini = float("inf")
@@ -66,6 +66,7 @@ minr -= 1
 maxr += 1
 mini -= 1
 maxi += 1
+print(minr, maxr, mini, maxi)
 
 xx = np.linspace(minr, maxr, num=SIZE)
 yy = np.linspace(mini, maxi, num=SIZE)
@@ -85,6 +86,8 @@ zz = np.array(zz).T  # transpose so the imaginary value is the y axis
 t = time.time()
 zz = solve(p, zz)
 
+print(time.time() - t)  # time the calculations of the points
+
 nzz = []
 for line in zz:
     nz = []
@@ -94,6 +97,11 @@ for line in zz:
 
 print(time.time() - t)  # time the creation of the image
 
-
-plt.imshow(nzz)  # show the image
+fig, ax = plt.subplots()
+plt.imshow(nzz, cmap="jet")  # show the image
+ll = len(ax.get_xticks())
+xticks = np.linspace(minr, maxr, ll)
+yticks = np.linspace(minr, maxr, ll)
+ax.set_xticklabels(xticks)
+ax.set_yticklabels(yticks)
 plt.show()
