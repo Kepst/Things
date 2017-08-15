@@ -102,10 +102,8 @@ t1 = time.time()
 
 while not ready(n):
     test = next(rep)
-    for x in range(9):
-        for y in range(9):
-            if (x, y) in zeros:
-                n[y][x] = int(test[zeros.index((x, y))])
+    for (x, y) in zeros:
+        n[y][x] = int(test[zeros.index((x, y))])
 
 show_puzzle(n)
 print()
