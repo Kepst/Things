@@ -1,15 +1,27 @@
 import numpy as np
 import time
+from random import shuffle
 
-sudoku_test = """673528491
-584193627
-129476358
-791835204
-362914875
-845762139
-937681542
-416259783
-258340910
+sudoku_brute = """000000000
+000003085
+001020000
+000507000
+004000100
+090000000
+500000073
+002010000
+000040009
+"""
+
+sudoku_test = """000000000
+000000000
+000000000
+000000000
+000000000
+000000000
+000000000
+000000000
+000000000
 """
 
 sudoku_easy = """073028090
@@ -43,6 +55,17 @@ sudoku_hard = """020050009
 000070064
 002065000
 700020050
+"""
+
+sudoku_hardest = """800000000
+003600000
+070090200
+050007000
+000045700
+000100030
+001000068
+008500010
+090000400
 """
 
 
@@ -164,7 +187,10 @@ def possibles(puzzle, y, x):
                 possible.pop(possible.index(puzzle[yy][xx]))
     return possible
 
-def solve_rec(puzzle, zeros, show=True):
+t = 0
+def solve_rec(puzzle: nd.array, zeros: list, show: bool = True) -> list:
+    global t
+    t += 1
     puzzle = np.copy(puzzle)
     if show:
         show_puzzle(puzzle)
@@ -172,6 +198,7 @@ def solve_rec(puzzle, zeros, show=True):
         return puzzle
     x, y = zeros[0]
     possible = possibles(puzzle, y, x)
+    shuffle(possible)
     #print(y, x, possible)
     if len(possible) == 0:
         return puzzle
@@ -183,6 +210,97 @@ def solve_rec(puzzle, zeros, show=True):
     else:
         return puzzle
 
-p, z = parse_puzzle(sudoku_hard)
-solve = solve_rec(p, z)
-show_puzzle(solve)
+
+def solve_human_1(puzzle, zeros):
+    running = True
+    while running:
+        running = False
+        for x, y in zeros:
+            possible = possibles(puzzle, y, x)
+            if len(possible) == 1:
+                zeros.pop(zeros.index((x, y)))
+                puzzle[y][x] = possible[0]
+                running = True
+                #print(x, y, possible)
+    return puzzle, zeros
+
+def solve_human_2(puzzle, zeros):
+    running = True
+    while running:
+        if len(zeros) == 0:
+            break
+        running = False
+        for x in range(9):
+            poss = {}
+            count = dict([(n, 0) for n in range(1, 10)])
+            for y in range(9):
+                if (x, y) in zeros:
+                    poss[y] = possibles(puzzle, y, x)
+            for key in poss:
+                for num in poss[key]:
+                    count[num] += 1
+            for num in count:
+                if count[num] == 1:
+                    running = True
+                    for l in poss:
+                        if num in poss[l]:
+                            y = l
+                            break
+                    zeros.pop(zeros.index((x, y)))
+                    puzzle[y][x] = num
+        for y in range(9):
+            poss = {}
+            count = dict([(n, 0) for n in range(1, 10)])
+            for x in range(9):
+                if (x, y) in zeros:
+                    poss[x] = possibles(puzzle, y, x)
+            for key in poss:
+                for num in poss[key]:
+                    count[num] += 1
+            for num in count:
+                if count[num] == 1:
+                    running = True
+                    for l in poss:
+                        if num in poss[l]:
+                            x = l
+                            break
+                    zeros.pop(zeros.index((x, y)))
+                    puzzle[y][x] = num
+        for square_x in range(3):
+            for square_y in range(3):
+                poss = {}
+                count = dict([(n, 0) for n in range(1, 10)])
+                for xx in range(square_x * 3, square_x * 3 + 3):
+                    for yy in range(square_y * 3, square_y * 3 + 3):
+                        if (xx, yy) in zeros:
+                            poss[xx+3*yy] = possibles(puzzle, yy, xx)
+                for key in poss:
+                    for num in poss[key]:
+                        count[num] += 1
+                for num in count:
+                    if count[num] == 1:
+                        running = True
+                        for l in poss:
+                            if num in poss[l]:
+                                x = l % 3
+                                y = l // 3
+                                break
+                        zeros.pop(zeros.index((x, y)))
+                        puzzle[y][x] = num
+    return puzzle, zeros
+
+t1 = time.time()
+p, z = parse_puzzle(sudoku_hardest)
+nflag = 0
+while True:
+    flag = len(z)
+    print(flag)
+    if flag == nflag or flag == 0:
+        break
+    solved, z = solve_human_2(p, z)
+    solved, z = solve_human_1(p, z)
+    nflag = flag
+solved = solve_rec(p, z)
+show_puzzle(solved)
+print(t)
+print(time.time() - t1)
